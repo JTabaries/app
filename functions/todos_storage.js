@@ -6,7 +6,7 @@ const path = 'storage/todos.json'
  * @typedef {object} Todo
  * @property {number} id
  * @property {string} title
- * @property {boolean} completed
+ * @property {boolean} completed 
  */
 
 /**
