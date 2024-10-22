@@ -1,14 +1,36 @@
-import {readdir, stat} from 'node:fs/promises'
+import {createServer} from 'node:http'
+import { create, index } from './functions/api/todos.js'
+import { NotFoundError } from './functions/errors.js'
 
-const files =await readdir('./',{withFileTypes:true})
-for (const file of files){
-    const parts=[
-        file.isDirectory() ? 'D' : 'F',
-        file.name
-    ]
-    if(!file.isDirectory()){
-        const {size} = await stat(file.name)
-        parts.push(`${size}o`)
+createServer(async (req,res)=>{
+    try {
+        res.setHeader('Content-Type','application/json')
+        const url = new URL(req.url, `http://${req.headers.host}`)
+        const endpoint = `${req.method}:${url.pathname}`
+        let results
+        switch (endpoint) {
+            case 'GET:/todos':
+                results = await index(req,res)
+                break;
+            case 'POST:/todos':
+                results = await create(req,res)
+                break;
+            case 'DELETE:/todos':
+                results = await remove(req,res,url)
+                break;
+            default:
+                res.writeHead(404)
+        }
+        if(results){
+            res.write(JSON.stringify(results))
+        }
+        
+    } catch (error) {
+        if(error instanceof NotFoundError){
+            res.writeHead(404)
+        }else{
+            throw error
+        }
     }
-    console.log(parts.join(' - '))
-}
+    res.end()
+}).listen(3000) 
